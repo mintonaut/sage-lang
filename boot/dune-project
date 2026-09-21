@@ -1,0 +1,17 @@
+(lang dune 3.23)
+
+(name sageboot)
+(generate_opam_files true)
+(source
+ (github mintonaut/sage-lang))
+
+(authors "Hugo Moreira")
+(maintainers "Hugo Moreira")
+(license GPL-3.0)
+
+(package
+ (name sageboot)
+ (synopsis "Compiler for the Sage language")
+ (depends ocaml)
+)
+; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html

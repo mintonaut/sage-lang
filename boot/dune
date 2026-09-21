@@ -1,0 +1,6 @@
+(include_subdirs unqualified)
+
+(executable
+  (public_name sageboot)
+  (name main)
+)
