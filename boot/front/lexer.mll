@@ -11,6 +11,30 @@
             file = lexbuf.Lexing.lex_start_p.pos_fname;
             reason;
         }))
+
+    let operators = Table.alloc 32
+
+    let _ = List.iter (fun (kwd, tok) -> Table.put operators kwd tok) [
+        ("+",  Plus);
+        ("-",  Minus);
+        ("*",  Star);
+        ("/",  Slash);
+        ("%",  Percent);
+        ("<",  Langle);
+        ("<=", LangleEq);
+        (">",  Rangle);
+        (">=", RangleEq);
+        ("==", EqEq);
+        ("!=", NotEq);
+        ("<<", Langle2);
+        (">>", Rangle2);
+        ("&&", AndAnd);
+        ("||", OrOr);
+        ("!",  Bang);
+        ("&",  And);
+        ("|",  Or);
+        ("^",  Caret);
+    ]
 }
 
 let dec = ['0'-'9']['0'-'9' '_']*
@@ -21,6 +45,8 @@ let int = (dec | bin | oct | hex)
 
 let ws = [' ' '\t' '\r']
 
+let symbol = ['+' '-' '*' '/' '%' '<' '>' '=' '!' '^' '|' '&']
+
 rule token = parse
     | '\n'          { Lexing.new_line lexbuf;
                       token lexbuf }
@@ -29,6 +55,10 @@ rule token = parse
     | '('           { Lpar }
     | ')'           { Rpar }
     | ','           { Comma }
+
+    | symbol+ as op { match Table.search operators op with
+                      | Some op -> op
+                      | None -> error lexbuf "%S is not a valid operator" op }
 
     | int as num    { Lit_int (Int64.of_string num) }
 

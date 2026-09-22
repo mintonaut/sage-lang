@@ -67,3 +67,13 @@ let expect (tk: token) (ps: pstate) =
     else error ps "Expected token %S, found %S" 
         (string_of_token tk) (string_of_token pk)
 
+let bracketed
+    ~(bra: token)
+    ~(ket: token)
+    (prule: pstate -> 'a)
+    (ps: pstate)
+    : 'a = 
+        expect bra ps;
+        let res = prule ps in
+        expect ket ps;
+        res
