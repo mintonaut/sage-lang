@@ -1,5 +1,15 @@
 (include_subdirs unqualified)
 
+(rule
+  (target lexer.ml)
+  (deps front/lexer.mll)
+  (action
+    (chdir %{workspace_root}
+      (run %{bin:ocamllex} -q -o %{target} %{deps})
+    )
+  )
+)
+
 (executable
   (public_name sageboot)
   (name main)

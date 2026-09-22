@@ -1,0 +1,4 @@
+expr ::= lit
+	  |  '(' expr ')'
+
+lit ::= <int64>
