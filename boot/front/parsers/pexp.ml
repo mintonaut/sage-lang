@@ -1,17 +1,18 @@
 open! Parser
 
-let parse_lit (ps: pstate): unit option = 
+let parse_lit (ps: pstate): Ast.lit option = 
     match peek ps with
-    | Lit_int _ -> Some ()
+    | Lit_int i -> Some (LIT_int i)
     | _ -> None
 
-let rec parse_expr (ps: pstate): unit = 
+let rec parse_expr (ps: pstate): Ast.expr = 
     match peek ps with
     | Lpar -> 
         bump ps;
-        parse_expr ps;
+        let expr = parse_expr ps in
         expect Rpar ps;
+        expr
     | _ -> match parse_lit ps with
-    | Some _ -> bump ps; ()
+    | Some lit -> bump ps; EXPR_lit lit
     | None -> unexpected ps
 
