@@ -1,6 +1,7 @@
 type expr = 
     | EXPR_lit of lit
     | EXPR_par of expr
+    | EXPR_tup of expr array
     | EXPR_infix of expr_infix
     | EXPR_prefix of expr_prefix
 
@@ -27,4 +28,28 @@ and binop =
 
 and unop = 
     | Neg | Not
+
+type precedence = 
+    | None
+    | Or (* || *)
+    | And (* && *)
+    | Compare (* < <= > >= == != *)
+    | BitOr (* | *)
+    | BitXor (* ^ *)
+    | BitAnd (* & *)
+    | Shift (* << >> *)
+    | Sum (* + - *)
+    | Product (* * / % *)
+
+let precedence (binop: binop): precedence = 
+    match binop with
+    | Add | Sub -> Sum
+    | Mul | Div | Mod -> Product
+    | Lst | Leq | Grt | Geq | Eqs | Neq -> Compare
+    | Shl | Shr -> Shift
+    | BitAnd -> BitAnd
+    | BitOr -> BitOr
+    | BitXor -> BitXor
+    | And -> And
+    | Or -> Or
 

@@ -60,7 +60,7 @@ let bump (ps: pstate) =
 let unexpected (ps: pstate) = 
     error ps "Unexpected token: %S" (string_of_token ps.pstate_peek)
 
-let expect (tk: token) (ps: pstate) = 
+let expect (ps: pstate) (tk: token) = 
     let pk = peek ps in
     if tk == pk 
     then bump ps
@@ -73,7 +73,31 @@ let bracketed
     (prule: pstate -> 'a)
     (ps: pstate)
     : 'a = 
-        expect bra ps;
+        expect ps bra;
         let res = prule ps in
-        expect ket ps;
+        expect ps ket;
         res
+
+let tuple
+    ?(min=1)
+    ~(bra: token)
+    ?(sep: token option)
+    ~(ket: token)
+    (prule: pstate -> 'a)
+    (ps: pstate)
+    : 'a array = 
+        expect ps bra;
+        let separator ps = Option.iter (expect ps) sep in
+        let res = ref (if min > 0 then [prule ps] else []) in
+        while List.compare_length_with !res min < 0 do
+            separator ps;
+            res := prule ps :: !res;
+        done;
+        if not (List.is_empty !res) then separator ps;
+        while not (peek ps == ket) do
+            res := prule ps :: !res;
+            if not (peek ps == ket) then separator ps;
+        done;
+        expect ps ket;
+        Array.of_list (List.rev !res)
+
