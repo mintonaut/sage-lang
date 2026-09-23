@@ -1,4 +1,7 @@
-type expr = 
+open! Loc
+
+type expr = expr' located
+and expr' = 
     | EXPR_lit of lit
     | EXPR_par of expr
     | EXPR_tup of expr array

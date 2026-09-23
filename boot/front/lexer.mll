@@ -2,15 +2,13 @@
     open! Token
 
     exception Lexer_err of {
-        file: string;
+        location: Loc.location;
         reason: string;
     }
 
     let error (lexbuf: Lexing.lexbuf) = 
-        Printf.ksprintf (fun reason -> raise (Lexer_err { 
-            file = lexbuf.Lexing.lex_start_p.pos_fname;
-            reason;
-        }))
+        let location = Loc.lexloc lexbuf.Lexing.lex_start_p in
+        Printf.ksprintf (fun reason -> raise (Lexer_err { location; reason }))
 
     let operators = Table.alloc 32
 

@@ -50,7 +50,7 @@ let _ =
         match file.file_ext with
         | "sg" -> Parser.with_handle sess @@ fun _ ->
             let pstate = Parser.make_state sess file in
-            ignore (Pexp.parse_expr pstate)
+            ignore (Pexp.parse_expr pstate);
         | ext -> Session.error sess "unrecognized input file type: %s" ext
 
 ;;

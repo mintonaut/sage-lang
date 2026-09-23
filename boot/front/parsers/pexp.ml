@@ -48,37 +48,40 @@ and parse_expr_infix_rest
                 if m_prec < op_prec then begin
                     bump ps;
                     let rhs = parse_expr_infix op_prec ps in
-                    let lhs = Ast.EXPR_infix {
+                    let span = Loc.combine lhs.span rhs.span in
+                    let lhs = Loc.locate (Ast.EXPR_infix {
                         Ast.infix_lhs = lhs;
                         Ast.infix_op  = op;
                         Ast.infix_rhs = rhs;
-                    } in go lhs
+                    }) span 
+                    in go lhs
                 end 
                 else lhs
         in go lhs
 
 and parse_expr_prefix (ps: pstate): Ast.expr = 
+    let apos = lexpos ps in
     match peek ps with
-    | Plus -> parse_expr_prefix ps (* +expr is identical to expr *)
-    | Minus -> make_expr_unary Neg ps (* -expr *)
-    | Bang -> make_expr_unary Not ps (* !expr *)
+    | Plus -> (bump ps; parse_expr_prefix ps) (* +expr is identical to expr *)
+    | Minus -> make_expr_unary apos Ast.Neg ps (* -expr *)
+    | Bang -> make_expr_unary apos Ast.Not ps (* !expr *)
     | _ -> parse_expr_bottom ps
 
-and make_expr_unary (op: Ast.unop) (ps: pstate): Ast.expr = 
+and make_expr_unary (apos: Loc.position) (op: Ast.unop) (ps: pstate): Ast.expr = 
     bump ps;
     let expr = parse_expr_prefix ps in
-    Ast.EXPR_prefix {
+    span_from ps apos (Ast.EXPR_prefix {
         Ast.prefix_op = op;
         Ast.prefix_expr = expr;
-    }
+    })
 
-and parse_expr_bottom (ps: pstate): Ast.expr = 
+and parse_expr_bottom (ps: pstate): Ast.expr = located ps @@ fun ps -> 
     match peek ps with
     | Lpar -> 
         let tup = tuple ~min:0 ~bra:Lpar ~sep:Comma ~ket:Rpar parse_expr ps in
         begin match tup with
-        | [| expr |] -> EXPR_par expr
-        | fields -> EXPR_tup fields
+        | [| expr |] -> Ast.EXPR_par expr
+        | fields -> Ast.EXPR_tup fields
         end
     | _ -> match parse_lit ps with
     | Some lit -> (bump ps; Ast.EXPR_lit lit)

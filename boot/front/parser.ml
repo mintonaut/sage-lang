@@ -1,10 +1,11 @@
 open! Token
 
 type pstate = {
-    mutable pstate_peek: token;
-    pstate_sess:         Session.sess;
-    pstate_lexbuf:       Lexing.lexbuf;
-    pstate_file:         string;
+    mutable pstate_peek:     token;
+    mutable pstate_last_pos: Lexing.position;
+    pstate_sess:             Session.sess;
+    pstate_lexbuf:           Lexing.lexbuf;
+    pstate_file:             string;
 }
 
 let log (ps: pstate) = Session.log
@@ -22,6 +23,7 @@ let make_state
         let token = Lexer.token lexbuf in 
         let pstate = {
             pstate_peek = token;
+            pstate_last_pos = lexbuf.lex_curr_p;
             pstate_sess = sess;
             pstate_lexbuf = lexbuf;
             pstate_file = file.file_name;
@@ -30,24 +32,28 @@ let make_state
         pstate
 
 exception Parser_err of {
-    file: string;
+    location: Loc.location;
     reason: string;
 }
 
 let error (ps: pstate) = 
-    Printf.ksprintf (fun reason -> raise (Parser_err { 
-        file = ps.pstate_file; 
-        reason;
-    }))
+    let location = Loc.lexloc ps.pstate_lexbuf.Lexing.lex_start_p in
+    Printf.ksprintf (fun reason -> raise (Parser_err { location; reason }))
 
 let with_handle (sess: Session.sess) (thunk: unit -> unit): unit = 
     match thunk () with
     | value -> value
-    | exception Parser_err { file; reason } -> 
-        Session.error sess "%s: %s" file reason
+    | exception Parser_err { location; reason } -> 
+        Session.error sess "%s: %s" (Loc.string_of_location location) reason
 
-    | exception Lexer.Lexer_err { file; reason } -> 
-        Session.error sess "%s: %s" file reason
+    | exception Lexer.Lexer_err { location; reason } -> 
+        Session.error sess "%s: %s" (Loc.string_of_location location) reason
+
+let lexpos (ps: pstate): Loc.position = 
+    Loc.lexpos ps.pstate_lexbuf.Lexing.lex_start_p
+
+let lexloc (ps: pstate): Loc.location = 
+    Loc.lexloc ps.pstate_lexbuf.Lexing.lex_start_p
 
 let peek (ps: pstate) = 
     ps.pstate_peek
@@ -55,6 +61,7 @@ let peek (ps: pstate) =
 let bump (ps: pstate) = 
     log ps "%s: accepted token %S" 
         ps.pstate_file (string_of_token ps.pstate_peek);
+    ps.pstate_last_pos <- ps.pstate_lexbuf.Lexing.lex_curr_p;
     ps.pstate_peek <- Lexer.token ps.pstate_lexbuf
 
 let unexpected (ps: pstate) = 
@@ -66,6 +73,32 @@ let expect (ps: pstate) (tk: token) =
     then bump ps
     else error ps "Expected token %S, found %S" 
         (string_of_token tk) (string_of_token pk)
+
+let spanning
+    (ps: pstate)
+    (apos: Loc.position)
+    (bpos: Loc.position)
+    (node: 'a)
+    : 'a Loc.located = 
+        let span = Loc.span ps.pstate_file apos bpos in
+        Loc.locate node span
+
+let [@inline] located
+    (ps: pstate)
+    (prule: pstate -> 'a)
+    : 'a Loc.located = 
+        let apos = Loc.lexpos ps.pstate_lexbuf.Lexing.lex_start_p in 
+        let res = prule ps in
+        let bpos = Loc.lexpos ps.pstate_last_pos in
+        spanning ps apos bpos res
+
+let span_from 
+    (ps: pstate) 
+    (apos: Loc.position) 
+    (node: 'a)
+    : 'a Loc.located = 
+        let bpos = Loc.lexpos ps.pstate_last_pos in
+        spanning ps apos bpos node
 
 let bracketed
     ~(bra: token)
