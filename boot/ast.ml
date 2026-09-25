@@ -1,5 +1,11 @@
 open! Loc
 
+type ty = ty' located
+and ty' = 
+    | TY_var of string
+    | TY_par of ty
+    | TY_tup of ty array
+
 type stmt = stmt' located
 and stmt' = 
     | STMT_noop

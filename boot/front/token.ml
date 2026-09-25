@@ -2,7 +2,7 @@ type token =
     (* Separator and miscellaneous tokens *)
     | Lpar | Rpar
     | Lbrace | Rbrace
-    | Comma | Semi 
+    | Comma | Semi | Colon
     | Eq
 
     (* Operators *)
@@ -27,6 +27,7 @@ let string_of_token = function
     | Rbrace    -> "}"
     | Semi      -> ";"
     | Comma     -> ","
+    | Colon     -> ":"
 
     | Eq        -> "="
     | Plus      -> "+"
