@@ -1,5 +1,9 @@
 open! Parser
 
+let parse_ident (ps: pstate): string = 
+    match peek ps with
+    | Ident str -> str
+    | _ -> unexpected ~expected:"an identifier" ps
 
 let parse_lit (ps: pstate): Ast.lit option = 
     match peek ps with
@@ -83,6 +87,7 @@ and parse_expr_bottom (ps: pstate): Ast.expr = located ps @@ fun ps ->
         | [| expr |] -> Ast.EXPR_par expr
         | fields -> Ast.EXPR_tup fields
         end
+    | Ident str -> (bump ps; Ast.EXPR_var str)
     | _ -> match parse_lit ps with
     | Some lit -> (bump ps; Ast.EXPR_lit lit)
     | None -> unexpected ps
@@ -98,6 +103,19 @@ and parse_stmt_block (ps: pstate): Ast.block = located ps @@ fun ps ->
 
 and parse_stmt (ps: pstate): Ast.stmt = located ps @@ fun ps -> 
     match peek ps with
+    | Let -> 
+        bump ps;
+        let var = parse_ident ps in
+        let rhs = match peek ps with
+        | Eq -> (bump ps; Some (parse_expr ps))
+        | Semi -> None
+        | _ -> unexpected ps
+        in
+        expect ps Semi;
+        Ast.STMT_let {
+            Ast.let_var = var;
+            Ast.let_expr = rhs;
+        }
     | Semi -> (bump ps; Ast.STMT_noop)
     | _ -> 
         let expr = parse_expr ps in

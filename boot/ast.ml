@@ -3,13 +3,20 @@ open! Loc
 type stmt = stmt' located
 and stmt' = 
     | STMT_noop
+    | STMT_let of stmt_let
     | STMT_expr of expr
+
+and stmt_let = {
+    let_var: string;
+    let_expr: expr option;
+}
 
 and block = stmt array located
 
 and expr = expr' located
 and expr' = 
     | EXPR_lit of lit
+    | EXPR_var of string
     | EXPR_par of expr
     | EXPR_tup of expr array
     | EXPR_infix of expr_infix

@@ -13,6 +13,7 @@
     let operators = Table.alloc 32
 
     let _ = List.iter (fun (kwd, tok) -> Table.put operators kwd tok) [
+        ("=",  Eq);
         ("+",  Plus);
         ("-",  Minus);
         ("*",  Star);
@@ -33,6 +34,12 @@
         ("|",  Or);
         ("^",  Caret);
     ]
+
+    let keywords = Table.alloc 16
+
+    let _ = List.iter (fun (kwd, tok) -> Table.put keywords kwd tok) [
+        ("let", Let);
+    ]
 }
 
 let dec = ['0'-'9']['0'-'9' '_']*
@@ -43,6 +50,7 @@ let int = (dec | bin | oct | hex)
 
 let ws = [' ' '\t' '\r']
 
+let ident = ['a'-'z' 'A'-'Z' '_']['a'-'z' 'A'-'Z' '0'-'9' '_']*
 let symbol = ['+' '-' '*' '/' '%' '<' '>' '=' '!' '^' '|' '&']
 
 rule token = parse
@@ -60,6 +68,10 @@ rule token = parse
     | symbol+ as op { match Table.search operators op with
                       | Some op -> op
                       | None -> error lexbuf "%S is not a valid operator" op }
+
+    | ident as id   { match Table.search keywords id with
+                      | Some tok -> tok
+                      | None -> Ident id }
 
     | int as num    { Lit_int (Int64.of_string num) }
 

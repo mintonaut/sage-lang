@@ -64,8 +64,10 @@ let bump (ps: pstate) =
     ps.pstate_last_pos <- ps.pstate_lexbuf.Lexing.lex_curr_p;
     ps.pstate_peek <- Lexer.token ps.pstate_lexbuf
 
-let unexpected (ps: pstate) = 
-    error ps "Unexpected token: %S" (string_of_token ps.pstate_peek)
+let unexpected ?(expected: string option) (ps: pstate) = 
+    (match expected with
+    | None | Some "" -> error ps "Unexpected token: %S"
+    | Some exp -> error ps "Expected %s, but found %S" exp) (string_of_token ps.pstate_peek)
 
 let expect (ps: pstate) (tk: token) = 
     let pk = peek ps in
