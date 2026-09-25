@@ -69,7 +69,7 @@ and parse_expr_prefix (ps: pstate): Ast.expr =
     | Plus -> (bump ps; parse_expr_prefix ps) (* +expr is identical to expr *)
     | Minus -> make_expr_unary apos Ast.Neg ps (* -expr *)
     | Bang -> make_expr_unary apos Ast.Not ps (* !expr *)
-    | _ -> parse_expr_bottom ps
+    | _ -> parse_expr_call ps
 
 and make_expr_unary (apos: Loc.position) (op: Ast.unop) (ps: pstate): Ast.expr = 
     bump ps;
@@ -78,6 +78,18 @@ and make_expr_unary (apos: Loc.position) (op: Ast.unop) (ps: pstate): Ast.expr =
         Ast.prefix_op = op;
         Ast.prefix_expr = expr;
     })
+
+and parse_expr_call (ps: pstate): Ast.expr = 
+    let apos = lexpos ps in
+    let lhs = parse_expr_bottom ps in
+    match peek ps with
+    | Lpar -> 
+        let args = tuple ~min:0 ~bra:Lpar ~sep:Comma ~ket:Rpar parse_expr ps in
+        span_from ps apos (Ast.EXPR_call {
+            Ast.call_fn = lhs;
+            Ast.call_args = args;
+        })
+    | _ -> lhs
 
 and parse_expr_bottom (ps: pstate): Ast.expr = located ps @@ fun ps -> 
     match peek ps with

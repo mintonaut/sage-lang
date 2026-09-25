@@ -22,6 +22,7 @@ and expr' =
     | EXPR_infix of expr_infix
     | EXPR_prefix of expr_prefix
     | EXPR_block of block
+    | EXPR_call of expr_call
 
 and expr_infix = {
     infix_lhs: expr;
@@ -32,6 +33,11 @@ and expr_infix = {
 and expr_prefix = {
     prefix_op: unop;
     prefix_expr: expr;
+}
+
+and expr_call = {
+    call_fn: expr;
+    call_args: expr array;
 }
 
 and lit = 
