@@ -13,6 +13,7 @@ type token =
 
     (* Reversed keywords + variables *)
     | Let
+    | Fn
     | Ident of string
 
     (* Literal tokens *)
@@ -51,6 +52,7 @@ let string_of_token = function
     | Bang      -> "!"
 
     | Let       -> "let"
+    | Fn        -> "fn"
 
     | Lit_int i -> Int64.to_string i
 

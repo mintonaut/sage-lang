@@ -1,9 +1,5 @@
 open! Parser
-
-let parse_ident (ps: pstate): string = 
-    match peek ps with
-    | Ident str -> str
-    | _ -> unexpected ~expected:"an identifier" ps
+open! Putil
 
 let parse_lit (ps: pstate): Ast.lit option = 
     match peek ps with

@@ -102,6 +102,13 @@ let span_from
         let bpos = Loc.lexpos ps.pstate_last_pos in
         spanning ps apos bpos node
 
+let nospan
+    (ps: pstate)
+    (node: 'a)
+    : 'a Loc.located = 
+        let apos = Loc.lexpos ps.pstate_last_pos in
+        spanning ps apos apos node
+
 let bracketed
     ~(bra: token)
     ~(ket: token)

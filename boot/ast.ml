@@ -59,6 +59,17 @@ and binop =
 and unop = 
     | Neg | Not
 
+type defn = defn' located
+and defn' = 
+    | DEFN_fn of defn_fn
+
+and defn_fn = {
+    fn_name: string;
+    fn_input: (string * ty) array;
+    fn_output: ty;
+    fn_body: block option;
+}
+
 type precedence = 
     | None
     | Or (* || *)

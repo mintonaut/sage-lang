@@ -1,4 +1,5 @@
 open! Pexp
+open! Pdefn
 open! Table
 
 let sess: Session.sess = {
@@ -50,7 +51,9 @@ let _ =
         match file.file_ext with
         | "sg" -> Parser.with_handle sess @@ fun _ ->
             let pstate = Parser.make_state sess file in
-            ignore (Pexp.parse_stmt_block pstate);
+            while not (Parser.peek pstate == Eof) do
+                ignore (Pdefn.parse_fn_defn pstate);
+            done;
         | ext -> Session.error sess "unrecognized input file type: %s" ext
 
 ;;

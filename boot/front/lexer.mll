@@ -39,6 +39,7 @@
 
     let _ = List.iter (fun (kwd, tok) -> Table.put keywords kwd tok) [
         ("let", Let);
+        ("fn",  Fn)
     ]
 }
 
