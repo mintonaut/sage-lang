@@ -1,12 +1,20 @@
 open! Loc
 
-type expr = expr' located
+type stmt = stmt' located
+and stmt' = 
+    | STMT_noop
+    | STMT_expr of expr
+
+and block = stmt array located
+
+and expr = expr' located
 and expr' = 
     | EXPR_lit of lit
     | EXPR_par of expr
     | EXPR_tup of expr array
     | EXPR_infix of expr_infix
     | EXPR_prefix of expr_prefix
+    | EXPR_block of block
 
 and expr_infix = {
     infix_lhs: expr;

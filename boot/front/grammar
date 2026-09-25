@@ -1,4 +1,13 @@
 expr ::= lit
-	  |  '(' expr ')'
+	  |  '(' exprs? ')'
+	  |  unop expr
+	  |  expr binop expr
+	  |  block
+
+exprs ::= expr
+	   |  expr ',' exprs
+
+unop ::= '+' | '-' | '!'
+binop ::= '+' | '-' | '*' | '/' | '%' | '&' | '|' | '^' | '&&' | '||' | '<' | '<=' | '>' | '>=' | '==' | '!=' | '<<' | '>>'
 
 lit ::= <int64>

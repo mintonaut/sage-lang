@@ -87,3 +87,20 @@ and parse_expr_bottom (ps: pstate): Ast.expr = located ps @@ fun ps ->
     | Some lit -> (bump ps; Ast.EXPR_lit lit)
     | None -> unexpected ps
 
+and parse_stmt_block (ps: pstate): Ast.block = located ps @@ fun ps -> 
+    let stmts = ref [] in
+    expect ps Lbrace;
+    while not (peek ps == Rbrace) do
+        stmts := parse_stmt ps :: !stmts
+    done;
+    expect ps Rbrace;
+    Array.of_list (List.rev !stmts)
+
+and parse_stmt (ps: pstate): Ast.stmt = located ps @@ fun ps -> 
+    match peek ps with
+    | Semi -> (bump ps; Ast.STMT_noop)
+    | _ -> 
+        let expr = parse_expr ps in
+        expect ps Semi;
+        Ast.STMT_expr expr
+

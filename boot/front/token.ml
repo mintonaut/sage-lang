@@ -1,7 +1,8 @@
 type token = 
     (* Separator and miscellaneous tokens *)
     | Lpar | Rpar
-    | Comma
+    | Lbrace | Rbrace
+    | Comma | Semi
 
     (* Operators *)
     | Plus | Minus | Star | Slash | Percent
@@ -17,6 +18,9 @@ type token =
 let string_of_token = function
     | Lpar      -> "("
     | Rpar      -> ")"
+    | Lbrace    -> "{"
+    | Rbrace    -> "}"
+    | Semi      -> ";"
     | Comma     -> ","
 
     | Plus      -> "+"

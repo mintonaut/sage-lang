@@ -52,6 +52,9 @@ rule token = parse
 
     | '('           { Lpar }
     | ')'           { Rpar }
+    | '{'           { Lbrace }
+    | '}'           { Rbrace }
+    | ';'           { Semi }
     | ','           { Comma }
 
     | symbol+ as op { match Table.search operators op with
