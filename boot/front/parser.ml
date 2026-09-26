@@ -67,14 +67,16 @@ let bump (ps: pstate) =
 let unexpected ?(expected: string option) (ps: pstate) = 
     (match expected with
     | None | Some "" -> error ps "Unexpected token: %S"
-    | Some exp -> error ps "Expected %s, but found %S" exp) (string_of_token ps.pstate_peek)
+    | Some exp -> error ps "Expected %s, found %S" exp) (string_of_token ps.pstate_peek)
 
-let expect (ps: pstate) (tk: token) = 
+let expect ?(expected: string option) (ps: pstate) (tk: token) = 
     let pk = peek ps in
     if tk == pk 
     then bump ps
-    else error ps "Expected token %S, found %S" 
-        (string_of_token tk) (string_of_token pk)
+    else match expected with
+        | None | Some "" -> error ps "Expected token %S, found %S" 
+            (string_of_token tk) (string_of_token pk)
+        | Some exp -> error ps "Expected %s, found %S" exp (string_of_token pk)
 
 let spanning
     (ps: pstate)
