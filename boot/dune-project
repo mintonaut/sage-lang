@@ -1,6 +1,6 @@
 (lang dune 3.24)
 
-(name boot)
+(name sageboot)
 
 (generate_opam_files true)
 
@@ -10,8 +10,8 @@
 (license GNU GLPv3)
 
 (package
- (name boot)
+ (name sageboot)
  (synopsis "Boot compiler for the Sage programming language")
- (depends ocaml)
+ (depends ocaml unix)
 )
 

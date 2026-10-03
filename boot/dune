@@ -2,5 +2,6 @@
 
 (executable
   (name main)
-  (public_name boot)
+  (public_name sageboot)
+  (libraries unix)
 )
