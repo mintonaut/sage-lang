@@ -1,0 +1,16 @@
+(lang dune 3.24)
+(name sageboot)
+(generate_opam_files true)
+(version 0.1-alpha)
+
+(source (github mintonaut/sage-lang))
+(authors "Mintonaut")
+(maintainers "Mintonaut")
+(license GNU GPLv3)
+
+(package
+ (name sageboot)
+ (synopsis "Boot compiler for the Sage programming language")
+ (depends ocaml)
+)
+

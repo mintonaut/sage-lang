@@ -1,0 +1,14 @@
+(include_subdirs unqualified)
+
+(rule
+  (target version.ml)
+  (action
+    (write-file %{target}
+      "let version = \"%{version:sageboot}\"")
+  )
+)
+
+(executable
+  (name main)
+  (public_name sageboot)
+)
