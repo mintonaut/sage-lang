@@ -8,6 +8,16 @@
   )
 )
 
+(rule
+  (target lexer.ml)
+  (deps front/lexer.mll)
+  (action
+    (chdir %{workspace_root}
+      (run %{bin:ocamllex} -q -o %{target} %{deps})
+    )
+  )
+)
+
 (executable
   (name main)
   (public_name sageboot)

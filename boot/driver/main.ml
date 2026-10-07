@@ -1,6 +1,17 @@
+open! Pexpr
+
 let sess: Session.sess = {
     sess_file_in = None;
+    sess_failed = false;
+    sess_log_out = stdout;
+    sess_log_err = stderr;
+    sess_log = {
+        log_parser = false;
+    };
 }
+
+let checkpoint _ = 
+    if sess.sess_failed then exit 1
 
 let error fmt = Printf.ksprintf begin fun str -> 
     Printf.fprintf stderr "Error: %s\n%!" str;
@@ -14,6 +25,7 @@ let print_version _ =
 let argset: (string * Arg.spec * string) list = 
     let flag name ~desc fn = name, Arg.Unit fn, desc in [
         flag "-version" ~desc:"Print version and exit" print_version;
+        flag "-lparser" ~desc:"Output parser logs" (fun _ -> sess.sess_log.log_parser <- true);
     ]
 
 ;;
@@ -34,8 +46,14 @@ let _ =
     match File.load Input Txt input with
     | exception _ -> error "could not open file %s" input
     | input -> match input.meta.ext with
-    | "sg" -> File.close input
+    | "sg" -> 
+        Parser.parse sess input Pexpr.parse_expr;
+        File.close input
     | _ -> File.close input; error "unrecognized file extension: %s" input.meta.name
+
+;;
+
+checkpoint ()
 
 ;;
 
