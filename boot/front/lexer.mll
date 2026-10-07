@@ -11,6 +11,14 @@
         raise (Lexer_err { reason; location })
     end
 
+    let keywords = Table.alloc 8;;
+
+    List.iter (fun (kwd, tok) -> Table.put keywords kwd tok) [
+        ("let", Let);
+        ("while", While);
+        ("if", If);
+        ("else", Else);
+    ]
 }
 
 let dec = ['0'-'9']['0'-'9' '_']*
@@ -33,6 +41,9 @@ rule token = parse
                      token lexbuf }
     | '('           { Lpar }
     | ')'           { Rpar }
+    | '{'           { Lbrace }
+    | '}'           { Rbrace }
+    | ';'           { Semi }
     | ','           { Comma }
 
     | "+"           { Plus }
@@ -67,7 +78,9 @@ rule token = parse
     | "<<="         { Eq (Some Langle2) }
     | ">>="         { Eq (Some Rangle2) }
 
-    | ident as id   { Ident (id) }
+    | ident as id   { match Table.search keywords id with
+                      | Some tok -> tok
+                      | None -> Ident (id) }
 
     | int as symbol { Lit { symbol; kind=Int } }
     | flo as symbol { Lit { symbol; kind=Float } }

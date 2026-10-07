@@ -1,6 +1,7 @@
 type token_kind = 
     | Lpar | Rpar
-    | Comma
+    | Lbrace | Rbrace
+    | Semi | Comma
 
     | Eq of token_kind option
     | Plus | Minus | Star | Slash | Percent
@@ -9,6 +10,10 @@ type token_kind =
     | And | Or | Caret
     | Langle2 | Rangle2
     | Bang
+
+    | Let
+    | While
+    | If | Else
 
     | Ident of string
     | Lit of {
@@ -28,6 +33,9 @@ let rec string_of_token_kind (tk: token_kind) =
     match tk with
     | Lpar      -> "("
     | Rpar      -> ")"
+    | Lbrace    -> "{"
+    | Rbrace    -> "}"
+    | Semi      -> ";"
     | Comma     -> ","
     
     | Eq None   -> "="
@@ -51,6 +59,11 @@ let rec string_of_token_kind (tk: token_kind) =
     | Langle2   -> "<<"
     | Rangle2   -> ">>"
     | Bang      -> "!"
+
+    | Let       -> "let"
+    | While     -> "while"
+    | If        -> "if"
+    | Else      -> "else"
 
     | Ident id  -> id
     | Lit x     -> x.symbol

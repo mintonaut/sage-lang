@@ -82,17 +82,50 @@ and parse_expr_call (ps: pstate): Ast.expr =
         })
     | _ -> lhs
 
-and parse_expr_bottom (ps: pstate): Ast.expr = locate ps ps.peek.span begin
+(* Also responsible for parsing statement-like expressions *)
+and parse_expr_bottom (ps: pstate): Ast.expr = 
     match ps.peek.kind with
-    | Ident id -> bump ps; Ast.EXPR_var id
+    | Ident id -> bump ps; Loc.locate ps.last.span (Ast.EXPR_var id)
     | Lpar -> 
+        let lo = ps.peek.span in
         let fields = many ~bra:Lpar ~sep:Comma ~ket:Rpar parse_expr ps in
-        begin match fields with
+        let expr = match fields with
         | [| expr |] -> Ast.EXPR_par expr
         | fields -> Ast.EXPR_tup fields
-        end
+        in locate ps lo expr
+    | Lbrace -> 
+        let block = parse_block ps in
+        Loc.locate block.span (Ast.EXPR_block block)
+    | _ when eat ps While -> parse_expr_while ps
+    | _ when eat ps If -> parse_expr_if ps
     | _ -> match parse_lit ps with
-    | Some lit -> bump ps; Ast.EXPR_lit lit
+    | Some lit -> bump ps; Loc.locate ps.last.span (Ast.EXPR_lit lit)
     | None -> unexpected ~expected:"an expression" ps
-end
+
+and parse_expr_while (ps: pstate): Ast.expr = 
+    let lo = ps.last.span in
+    let cond = parse_expr ps in
+    let body = parse_block ps in
+    locate ps lo (Ast.EXPR_while {
+        while_cond = cond;
+        while_body = body;
+    })
+
+and parse_expr_if (ps: pstate): Ast.expr = 
+    let lo = ps.last.span in
+    let cond = parse_expr ps in
+    let br_then = parse_block ps in
+    let br_else = if eat ps Else 
+        then match ps.peek.kind with
+        | Lbrace -> (* else { ... } *)
+            let block = parse_block ps in
+            Some (Loc.locate block.span (Ast.EXPR_block block))
+        | _ when eat ps If -> Some (parse_expr_if ps) (* else if ... *)
+        | _ -> unexpected ~expected:"either a block or an 'if' expression" ps
+        else None
+    in locate ps lo (Ast.EXPR_if {
+        if_cond = cond;
+        if_then = br_then;
+        if_else = br_else;
+    })
 

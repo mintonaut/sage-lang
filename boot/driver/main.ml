@@ -47,7 +47,7 @@ let _ =
     | exception _ -> error "could not open file %s" input
     | input -> match input.meta.ext with
     | "sg" -> 
-        Parser.parse sess input Pexpr.parse_expr;
+        Pmod.parse_src_file sess input;
         File.close input
     | _ -> File.close input; error "unrecognized file extension: %s" input.meta.name
 

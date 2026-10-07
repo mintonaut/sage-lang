@@ -100,23 +100,30 @@ let many
 
 (* Top-level parsing functions *)
 
-let parse 
+let parse_safe
     (sess: Session.sess)
-    (input: File.input File.handle)
-    (fn: pstate -> 'a)
-    : 'a = 
-        let ps = make_state sess input in
-        fn ps
-
-let parse
-    (sess: Session.sess)
-    (input: File.input File.handle)
-    (fn: pstate -> 'a)
+    (fn: unit -> 'a)
     : unit = 
-        match parse sess input fn with
+        match fn () with
         | _ -> ()
         | exception Parser_err { reason; location } -> 
             Session.error sess "%s at %s" reason (Loc.string_of_location location)
         | exception Lexer.Lexer_err { reason; location } -> 
             Session.error sess "%s at %s" reason (Loc.string_of_location location)
+
+(* Segregation of mutually recursive parser combinators via effects *)
+open! Effect
+open! Effect.Deep
+
+type _ stmt_parser = 
+    | Stmt: Ast.stmt stmt_parser
+    | Block: Ast.block stmt_parser
+
+type _ Effect.t += 
+    | Parser_expr: Ast.expr t
+    | Parser_stmt: 'a stmt_parser -> 'a t
+
+let parse_expr (_: pstate): Ast.expr = perform (Parser_expr)
+let parse_stmt (_: pstate): Ast.stmt = perform (Parser_stmt Stmt)
+let parse_block (_: pstate): Ast.block = perform (Parser_stmt Block)
 
