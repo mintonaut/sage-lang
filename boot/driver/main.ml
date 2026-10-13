@@ -33,3 +33,17 @@ then error "no input file specified"
 
 ;;
 
+let _ = 
+    let input = Option.get sess.sess_file_in in
+    let file = File.describe input in
+    match File.exists input, file.ext with
+    | true, "sg" -> ()
+    | true, _    -> error "%s: unrecognized file type" file.file
+    | false, _   -> if File.is_relative file 
+        then error "file %s does not exist within the %s directory" file.file 
+            (if file.dir = Filename.parent_dir_name then "parent" else "current")
+        else error "file %s does not exist inside %s" file.file file.dir
+
+;;
+
+print_endline "Accepted"
