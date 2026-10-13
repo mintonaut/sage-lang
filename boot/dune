@@ -1,6 +1,14 @@
 (include_subdirs unqualified)
 
 (rule
+  (target lexer.ml)
+  (deps front/lexer.mll)
+  (action (chdir %{workspace_root}
+            (run %{bin:ocamllex} -q -o %{target} %{deps})
+  ))
+)
+
+(rule
   (target version.ml)
   (action (write-file %{target}
     "let version_full = \"%{version:sageboot}\""

@@ -1,6 +1,16 @@
 type sess = {
-    mutable sess_file_in: string option;
-    mutable sess_failed:  bool;
+    mutable sess_file_in:   string option;
+    mutable sess_failed:    bool;
+    mutable sess_log_out:   sess_log_out;
+    mutable sess_log_flags: sess_log_flags;
+}
+
+and sess_log_out = {
+    mutable parser: out_channel;
+}
+
+and sess_log_flags = {
+    mutable parser: bool;
 }
 
 let log ~(name:string) ?(flag=true) channel = Printf.ksprintf begin
