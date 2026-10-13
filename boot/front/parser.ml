@@ -64,6 +64,13 @@ let eat (ps: pstate) (tk: token_kind): bool =
     then (bump ps; true)
     else false
 
+let ignore (ps: pstate) (tk: token_kind): unit = 
+    if ps.peek.kind == tk
+    then bump ps
+
+let is_any (ps: pstate) (tks: token_kind array): bool = 
+    Array.mem ps.peek.kind tks
+
 let locate
     (ps: pstate)
     (lo: Loc.span)
@@ -119,4 +126,18 @@ let handle_errors
         | exception Lexer.Lexer_err { location; reason } -> 
             Session.error sess "%s at %s" reason (Loc.string_of_location location);
             default
+
+(* Setup for mutually recursive definitions split amongst modules without recursive modules *)
+
+open! Effect
+open! Effect.Deep
+
+type _ ast_parser = 
+    | Expr: Ast.expr ast_parser
+    | Block: Ast.block ast_parser
+
+type _ Effect.t += Parse: 'a ast_parser -> 'a t
+
+let parse_expr (_: pstate): Ast.expr = perform (Parse Expr)
+let parse_block (_: pstate): Ast.block = perform (Parse Block)
 

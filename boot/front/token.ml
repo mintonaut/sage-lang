@@ -1,8 +1,10 @@
 type token_kind = 
     | Lpar | Rpar
-    | Comma
+    | Lbrace | Rbrace
+    | Comma | Semi
 
-    | Assign of token_kind option
+    | Eq 
+    | EqOp of token_kind
     | Plus 
     | Minus 
     | Star 
@@ -23,6 +25,11 @@ type token_kind =
     | OrOr
     | Bang
 
+    | Let
+    | While
+    | If | Else
+    | Loop | Break
+
     | Lit of { kind: lit_kind; symb: string }
     | Ident of string
 
@@ -35,7 +42,10 @@ and lit_kind =
 let rec string_of_token_kind = function
     | Lpar          -> "("
     | Rpar          -> ")"
+    | Lbrace        -> "{"
+    | Rbrace        -> "}"
     | Comma         -> ","
+    | Semi          -> ";"
 
     | Plus          -> "+"
     | Minus         -> "-"
@@ -56,8 +66,16 @@ let rec string_of_token_kind = function
     | AndAnd        -> "&&"
     | OrOr          -> "||"
     | Bang          -> "!"
-    | Assign None   -> "="
-    | Assign Some p -> string_of_token_kind p ^ "="
+    | Eq            -> "="
+    | EqOp p        -> string_of_token_kind p ^ "="
+
+    | Let           -> "let"
+    | While         -> "while"
+    | If            -> "if"
+    | Else          -> "else"
+    | Loop          -> "loop"
+    | Break         -> "break"
+
     | Lit lit       -> lit.symb
     | Ident id      -> id
 

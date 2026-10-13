@@ -10,6 +10,17 @@
         let location = Loc.lexloc lexbuf.lex_start_p in
         raise (Lexer_err { location; reason })
     end
+
+    let keywords = Table.alloc 8 ;;
+
+    List.iter (fun (kwd, tok) -> Table.put keywords kwd tok) [
+        ("let",   Let);
+        ("if",    If);
+        ("else",  Else);
+        ("while", While);
+        ("loop",  Loop);
+        ("break", Break);
+    ]
 }
 
 let bin = '0' 'b' ['0' '1']['0' '1' '_']*
@@ -32,7 +43,10 @@ rule token = parse
 
     | "("           { Lpar }
     | ")"           { Rpar }
+    | "{"           { Lbrace }
+    | "}"           { Rbrace }
     | ","           { Comma }
+    | ";"           { Semi }
 
     | "+"           { Plus }
     | "-"           { Minus }
@@ -54,19 +68,21 @@ rule token = parse
     | "&&"          { AndAnd }
     | "||"          { OrOr }
 
-    | "="           { Assign None }
-    | "+="          { Assign (Some Plus) }
-    | "-="          { Assign (Some Minus) }
-    | "*="          { Assign (Some Star) }
-    | "/="          { Assign (Some Slash) }
-    | "%="          { Assign (Some Percent) }
-    | "&="          { Assign (Some And) }
-    | "|="          { Assign (Some Or) }
-    | "^="          { Assign (Some Caret) }
-    | "<<="         { Assign (Some Langle2) }
-    | ">>="         { Assign (Some Rangle2) }
+    | "="           { Eq }
+    | "+="          { EqOp Plus }
+    | "-="          { EqOp Minus }
+    | "*="          { EqOp Star }
+    | "/="          { EqOp Slash }
+    | "%="          { EqOp Percent }
+    | "&="          { EqOp And }
+    | "|="          { EqOp Or }
+    | "^="          { EqOp Caret }
+    | "<<="         { EqOp Langle2 }
+    | ">>="         { EqOp Rangle2 }
 
-    | symbol as id  { Ident id }
+    | symbol as id  { match Table.search keywords id with
+                      | Some tok -> tok
+                      | None -> Ident id }
 
     | int as symb   { Lit { symb; kind=Lit_int } }
     | flo as symb   { Lit { symb; kind=Lit_float } }

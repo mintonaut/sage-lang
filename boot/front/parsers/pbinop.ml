@@ -62,17 +62,17 @@ let parse_binop (ps: pstate): binop option =
     | Langle2   -> Some (Binary Shl)
     | Rangle2   -> Some (Binary Shr)
 
-    | Assign None           -> Some (Assign None)
-    | Assign Some Plus      -> Some (Assign (Some Add))
-    | Assign Some Minus     -> Some (Assign (Some Sub))
-    | Assign Some Star      -> Some (Assign (Some Mul))
-    | Assign Some Slash     -> Some (Assign (Some Div))
-    | Assign Some Percent   -> Some (Assign (Some Mod))
-    | Assign Some Langle2   -> Some (Assign (Some Shl))
-    | Assign Some Rangle2   -> Some (Assign (Some Shr))
-    | Assign Some And       -> Some (Assign (Some BitAnd))
-    | Assign Some Caret     -> Some (Assign (Some BitXor))
-    | Assign Some Or        -> Some (Assign (Some BitOr))
+    | Eq            -> Some (Assign None)
+    | EqOp Plus     -> Some (Assign (Some Add))
+    | EqOp Minus    -> Some (Assign (Some Sub))
+    | EqOp Star     -> Some (Assign (Some Mul))
+    | EqOp Slash    -> Some (Assign (Some Div))
+    | EqOp Percent  -> Some (Assign (Some Mod))
+    | EqOp Langle2  -> Some (Assign (Some Shl))
+    | EqOp Rangle2  -> Some (Assign (Some Shr))
+    | EqOp And      -> Some (Assign (Some BitAnd))
+    | EqOp Caret    -> Some (Assign (Some BitXor))
+    | EqOp Or       -> Some (Assign (Some BitOr))
 
     | _ -> None
 

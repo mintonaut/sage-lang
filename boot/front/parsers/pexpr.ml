@@ -92,9 +92,51 @@ and parse_expr_bottom (ps: pstate): Ast.expr =
         | [| expr |] -> Ast.EXPR_par expr
         | fields -> Ast.EXPR_tup fields
         in locate ps lo expr
+    | Lbrace -> parse_expr_block ps
+    | _ when eat ps While -> parse_expr_while lo ps
+    | _ when eat ps If -> parse_expr_if lo ps
+    | _ when eat ps Loop -> parse_expr_loop lo ps
+    | _ when eat ps Break -> parse_expr_break lo ps
     | _ -> match parse_lit ps with
     | Some (symb, kind) -> 
         bump ps; 
         Loc.locate lo (Ast.EXPR_lit { lit_symb = symb; lit_kind = kind })
     | None -> unexpected ~expected:"an expression" ps
+
+and parse_expr_block (ps: pstate): Ast.expr = 
+    let block = parse_block ps in
+    Loc.locate block.span (Ast.EXPR_block block)
+
+and parse_expr_while (lo: Loc.span) (ps: pstate): Ast.expr = 
+    let cond = parse_expr ps in
+    let body = parse_block ps in
+    locate ps lo (Ast.EXPR_while {
+        while_cond = cond;
+        while_body = body;
+    })
+
+and parse_expr_if (lo: Loc.span) (ps: pstate): Ast.expr = 
+    let cond = parse_expr ps in
+    let bthen = parse_block ps in
+    let belse = match eat ps Else with
+    | false -> None
+    | true -> match ps.peek.kind with
+    | Lbrace -> Some (parse_expr_block ps)
+    | _ when eat ps If -> Some (parse_expr_if ps.last.span ps)
+    | _ -> unexpected ~expected:"an if expression or a block" ps
+    in locate ps lo (Ast.EXPR_if {
+        if_cond = cond;
+        if_then = bthen;
+        if_else = belse;
+    })
+
+and parse_expr_loop (lo: Loc.span) (ps: pstate): Ast.expr = 
+    let body = parse_block ps in
+    locate ps lo (Ast.EXPR_loop body)
+
+and parse_expr_break (lo: Loc.span) (ps: pstate): Ast.expr = 
+    let expr = match ps.peek.kind with
+    | Semi -> None
+    | _ -> Some (parse_expr ps)
+    in locate ps lo (Ast.EXPR_break expr)
 

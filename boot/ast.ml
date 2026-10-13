@@ -24,6 +24,7 @@ type asgop =
 
 type expr = expr' located
 and expr' = 
+    (* True expressions *)
     | EXPR_var of id
     | EXPR_par of expr
     | EXPR_tup of expr array
@@ -53,4 +54,51 @@ and expr' =
         call_fn: expr;
         call_args: expr array;
     }
+    (* Statements *)
+    | EXPR_block of block
+    | EXPR_if of {
+        if_cond: expr;
+        if_then: block;
+        if_else: expr option;
+    }
+    | EXPR_while of {
+        while_cond: expr;
+        while_body: block;
+    }
+    | EXPR_loop of block
+    | EXPR_break of expr option
+
+and stmt  = stmt' located
+and stmt' = 
+    | STMT_noop
+    | STMT_expr of expr
+    | STMT_semi of expr
+    | STMT_let of {
+        let_lhs: id;
+        let_rhs: expr;
+    }
+
+and block = stmt array located
+
+(* Returns true if the expression e has a block-y form, i.e. they define sequences of statements *)
+let is_block_like (e: expr): bool = 
+    match e.node with
+    | EXPR_if _ -> true
+    | EXPR_while _ -> true
+    | EXPR_block _ -> true
+    | EXPR_loop _ -> true
+    | _ -> false
+
+(* Returns true if the expression e can only be interpreted as a statement *)
+let is_statement (e: expr): bool = 
+    match e.node with
+    | EXPR_break _ -> true
+    | _ -> false
+
+(* Mark a statement as having an explicit ';'. Only affects expression-like statements *)
+let mark_trailing_semi (s: stmt): stmt = 
+    let stmt = match s.node with
+    | STMT_expr e -> STMT_semi e
+    | stmt -> stmt
+    in Loc.locate s.span stmt
 
