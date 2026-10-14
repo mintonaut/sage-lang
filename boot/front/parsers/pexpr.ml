@@ -26,11 +26,18 @@ let parse_lit (ps: pstate): (string * Ast.lit) option =
         in Some (x.symb, kind)
     | _ -> None
 
+let ensure_composable (prule: pstate -> Ast.expr) (ps: pstate): Ast.expr = 
+    let expr = prule ps in
+    if Ast.is_composable expr
+    then expr
+    else error ps "expected a composable expression"
+
 let rec parse_expr (ps: pstate): Ast.expr = 
     parse_expr_infix Unbound ps
 
 and parse_expr_infix (min_prec: precedence bound) (ps: pstate): Ast.expr = 
     let lhs = parse_expr_prefix ps in
+    if not (Ast.is_composable lhs) then lhs else
     parse_expr_infix_rest lhs min_prec ps
 
 and parse_expr_infix_rest 
@@ -47,7 +54,7 @@ and parse_expr_infix_rest
                 | Right -> Include (precedence binop)
                 | Left | NoFixity -> Exclude (precedence binop)
                 in 
-                let rhs = parse_expr_infix prec ps in
+                let rhs = ensure_composable (parse_expr_infix prec) ps in
                 let expr = match binop with
                 | Binary op -> mk_expr_binary lhs op rhs
                 | Assign maybe_op -> mk_expr_assign lhs maybe_op rhs
@@ -56,14 +63,14 @@ and parse_expr_infix_rest
 
 and parse_expr_prefix (ps: pstate): Ast.expr = 
     match ps.peek.kind with
-    | Plus -> bump ps; parse_expr_prefix ps
+    | Plus -> make_expr_prefix Ast.Pos ps
     | Minus -> make_expr_prefix Ast.Neg ps
     | Bang -> make_expr_prefix Ast.Not ps
     | _ -> parse_expr_call ps
 
 and make_expr_prefix (op: Ast.unop) (ps: pstate): Ast.expr = locate ps ps.peek.span begin
     bump ps;
-    let expr = parse_expr_prefix ps in
+    let expr = ensure_composable parse_expr_prefix ps in
     Ast.EXPR_prefix {
         prefix_op = op;
         prefix_expr = expr;

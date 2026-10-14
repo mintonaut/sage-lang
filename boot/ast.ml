@@ -15,7 +15,7 @@ type binop =
     | BitAnd | BitXor | BitOr
     | Shl | Shr
 
-type unop = Neg | Not
+type unop = Pos | Neg | Not
 
 type asgop = 
     | Add | Sub | Mul | Div | Mod
@@ -94,6 +94,47 @@ let is_statement (e: expr): bool =
     match e.node with
     | EXPR_break _ -> true
     | _ -> false
+
+(* [Note: Motivation and ambiguity of an expression-oriented syntax]
+   Block-like expressions are semantically equivalent to expressions, meaning they produce some 
+   kind of value. For statement blocks such as "{ 1 }", their value is the value of the last 
+   expression; for 'loop'-loops its the value of the expression given to a 'break' statement; and
+   so on. Importantly, these expressions can also be used at a statement context without trailing
+   semicolons.
+
+   The duality of such expressions comes with two major flaws. On one hand, it enables especially
+   dumb syntax, such as "{ 1 } + 2" and "2 + loop { break 1; }". While semantically valid, using 
+   block-like expressions as operands offers little benefit to internalizing the binary operations:
+   "{ 1 + 2 }" and "loop { break 1 + 2; }". 
+
+   On the other hand, it introduces ambiguity to the grammar. Since the grammar is whitespace-
+   agnostic, "{ 1 } - 2" can be interpreted as a statement block followed by an unrelated expression,
+   or as the binary negation of a block and a literal. Distinguishing between the two would either
+   entail making the parser to be aware of newline characters, or forcing semicolons at the end of
+   all block-like expressions.
+
+   Notice both issues are only specific to infix and prefix operations. Other composing expressions
+   (such as function calls) can benefit from having blocky expression as sub-expressions. Furthermore,
+   let-bindings can make use of blocky expressions to encode complex assignment logic and hidden
+   variables. So we certainly don't want to segregate pure expressions from statements.
+
+   The simplest solution is to just not allow non-composable expressions in such operations. An
+   infix/prefix expression can thus only use expressions that are not externally statement-like.
+   Only literal and data values, accesses, function calls and other infix/prefix expressions are
+   allowed as operands. A blocky expression can be used as an operand only when a part of a nested
+   composable expression (such as inside parentheses). While at first glace this solution seems
+   limiting, going against functional principles, it follows the syntax restrictions exhibited by
+   functional languages: "1 + if e then a else b + 2" usually goes against expected behavior and
+   requires additional parentheses to align them with the observed behavior - 
+   "1 + (if e then a else b) + 2"
+*)
+
+(* Returns true if the expression e can be composable with other expressions. A composable 
+   expression is one that can appear as an operand in a binary or unary operation. Only 'pure'
+   expressions (those that are not statements nor are block-like) are composable.
+   See [Note: Motivation and ambiguity of an expression-oriented syntax] *)
+let is_composable (e: expr): bool = 
+    not (is_block_like e || is_statement e)
 
 (* Mark a statement as having an explicit ';'. Only affects expression-like statements *)
 let mark_trailing_semi (s: stmt): stmt = 
