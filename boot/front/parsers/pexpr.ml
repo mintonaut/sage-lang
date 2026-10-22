@@ -17,15 +17,6 @@ let mk_expr_assign (lhs: Ast.expr) (op: Ast.asgop option) (rhs: Ast.expr): Ast.e
     | Some op -> Ast.EXPR_assign_op { assign_lhs = lhs; assign_op = op; assign_rhs = rhs }
     end
 
-let parse_lit (ps: pstate): (string * Ast.lit) option = 
-    match ps.peek.kind with
-    | Lit x -> 
-        let kind: Ast.lit = match x.kind with
-        | Lit_int -> LIT_int
-        | Lit_float -> LIT_float
-        in Some (x.symb, kind)
-    | _ -> None
-
 let ensure_composable (prule: pstate -> Ast.expr) (ps: pstate): Ast.expr = 
     let expr = prule ps in
     if Ast.is_composable expr
@@ -105,9 +96,9 @@ and parse_expr_bottom (ps: pstate): Ast.expr =
     | _ when eat ps Loop -> parse_expr_loop lo ps
     | _ when eat ps Break -> parse_expr_break lo ps
     | _ -> match parse_lit ps with
-    | Some (symb, kind) -> 
+    | Some lit -> 
         bump ps; 
-        Loc.locate lo (Ast.EXPR_lit { lit_symb = symb; lit_kind = kind })
+        Loc.locate lo (Ast.EXPR_lit lit)
     | None -> unexpected ~expected:"an expression" ps
 
 and parse_expr_block (ps: pstate): Ast.expr = 

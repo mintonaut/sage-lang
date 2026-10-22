@@ -14,12 +14,15 @@
     let keywords = Table.alloc 8 ;;
 
     List.iter (fun (kwd, tok) -> Table.put keywords kwd tok) [
-        ("let",   Let);
-        ("if",    If);
-        ("else",  Else);
-        ("while", While);
-        ("loop",  Loop);
-        ("break", Break);
+        ("const",   Const);
+        ("fn",      Fn);
+        ("return",  Return);
+        ("let",     Let);
+        ("if",      If);
+        ("else",    Else);
+        ("while",   While);
+        ("loop",    Loop);
+        ("break",   Break);
     ]
 }
 
@@ -47,6 +50,8 @@ rule token = parse
     | "}"           { Rbrace }
     | ","           { Comma }
     | ";"           { Semi }
+    | ":"           { Colon }
+    | "|"           { Pipe }
 
     | "+"           { Plus }
     | "-"           { Minus }

@@ -3,10 +3,48 @@ open Loc
 type id = string
 type symbol = string
 
-type lit = 
+type lit = {
+    lit_kind: lit_kind;
+    lit_symb: symbol;
+}
+
+and lit_kind = 
     | LIT_int
     | LIT_float
     | LIT_string
+
+type ty = ty' located
+and ty' = 
+    | TY_var of id
+    | TY_tup of ty array
+    | TY_par of ty
+    | TY_app of {
+        ty_fn: ty;
+        ty_arg: ty;
+    }
+    | TY_fn of {
+        fn_ins: ty array;
+        fn_out: ty;
+    }
+
+type unpat = Pos | Neg
+
+type pat = pat' located
+and pat' = 
+    | PAT_wild
+    | PAT_lit of lit
+    | PAT_var of id
+    | PAT_tup of pat array
+    | PAT_par of pat
+    | PAT_or  of pat array
+    | PAT_prefix of {
+        prefix_op: unpat;
+        prefix_pat: pat;
+    }
+    | PAT_sig of {
+        psig_pat: pat;
+        psig_ty: ty;
+    }
 
 type binop = 
     | Add | Sub | Mul | Div | Mod
@@ -28,10 +66,7 @@ and expr' =
     | EXPR_var of id
     | EXPR_par of expr
     | EXPR_tup of expr array
-    | EXPR_lit of {
-        lit_kind: lit;
-        lit_symb: symbol;
-    }
+    | EXPR_lit of lit
     | EXPR_prefix of {
         prefix_op: unop;
         prefix_expr: expr;
@@ -73,12 +108,37 @@ and stmt' =
     | STMT_noop
     | STMT_expr of expr
     | STMT_semi of expr
+    | STMT_spell of spell
     | STMT_let of {
-        let_lhs: id;
+        let_lhs: pat;
         let_rhs: expr;
     }
 
 and block = stmt array located
+
+and slot  = slot' located
+and slot' = {
+    slot_pat: pat;
+    slot_ty: ty;
+}
+
+and spell  = spell' located
+and spell' = 
+    | SPELL_const of {
+        const_name: symbol;
+        const_ty: ty;
+        const_expr: expr;
+    }
+    | SPELL_fn of {
+        fn_name: symbol;
+        fn_ins: slot array;
+        fn_out: ty option;
+        fn_body: fn_type;
+    }
+
+and fn_type = 
+    | Fn_block of block
+    | Fn_expr of expr
 
 (* Returns true if the expression e has a block-y form, i.e. they define sequences of statements *)
 let is_block_like (e: expr): bool = 
@@ -143,3 +203,8 @@ let mark_trailing_semi (s: stmt): stmt =
     | stmt -> stmt
     in Loc.locate s.span stmt
 
+(* Checks whether the expression can appear as the right-hand side of a function defined in functional-style *)
+let is_functional (e: expr): bool = 
+    match e.node with
+    | EXPR_block _ -> false
+    | _ -> is_block_like e || not (is_statement e)

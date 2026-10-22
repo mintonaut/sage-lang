@@ -68,7 +68,7 @@ let ignore (ps: pstate) (tk: token_kind): unit =
     if ps.peek.kind == tk
     then bump ps
 
-let is_any (ps: pstate) (tks: token_kind array): bool = 
+let matches (ps: pstate) (tks: token_kind array): bool = 
     Array.mem ps.peek.kind tks
 
 let locate
@@ -114,6 +114,17 @@ let many
         expect ps ket;
         Array.of_list (List.rev !res)
 
+let repeat
+    ~(sep: token_kind)
+    (prule: pstate -> 'a)
+    (ps: pstate)
+    : 'a array = 
+        let res = ref [prule ps] in
+        while eat ps sep do
+            res := prule ps :: !res
+        done;
+        Array.of_list (List.rev !res)
+
 let handle_errors
     ~(default:'a)
     (sess: Session.sess)
@@ -127,6 +138,21 @@ let handle_errors
             Session.error sess "%s at %s" reason (Loc.string_of_location location);
             default
 
+let parse_lit (ps: pstate): Ast.lit option = 
+    match ps.peek.kind with
+    | Lit x -> Some { 
+        lit_symb = x.symb;
+        lit_kind = match x.kind with
+        | Lit_int -> LIT_int
+        | Lit_float -> LIT_float
+    }
+    | _ -> None
+
+let parse_ident (ps: pstate): Ast.id = 
+    match ps.peek.kind with
+    | Ident id -> bump ps; id
+    | _ -> unexpected ~expected:"an identifier" ps
+
 (* Setup for mutually recursive definitions split amongst modules without recursive modules *)
 
 open! Effect
@@ -135,9 +161,17 @@ open! Effect.Deep
 type _ ast_parser = 
     | Expr: Ast.expr ast_parser
     | Block: Ast.block ast_parser
+    | Pattern: Ast.pat ast_parser
+    | Type: Ast.ty ast_parser
+    | Slot: Ast.slot ast_parser
+    | Spell: Ast.spell ast_parser
 
 type _ Effect.t += Parse: 'a ast_parser -> 'a t
 
 let parse_expr (_: pstate): Ast.expr = perform (Parse Expr)
 let parse_block (_: pstate): Ast.block = perform (Parse Block)
+let parse_type (_: pstate): Ast.ty = perform (Parse Type)
+let parse_slot (_: pstate): Ast.slot = perform (Parse Slot)
+let parse_spell (_: pstate): Ast.spell = perform (Parse Spell)
+let parse_pattern (_: pstate): Ast.pat = perform (Parse Pattern)
 

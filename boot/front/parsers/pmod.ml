@@ -1,11 +1,11 @@
 open! Parser
 
 let parse_mod (term: Token.token_kind) (ps: pstate): unit = 
-    let stmts = ref [] in
+    let spells = ref [] in
     while not (eat ps term) do
-        stmts := Pstmt.parse_stmt ps :: !stmts
+        spells := Pspell.parse_spell ps :: !spells
     done;
-    log ps "Parsed %d statements" (List.length !stmts)
+    log ps "Parsed %d spells" (List.length !spells)
 
 let parse_file (sess: Session.sess) = 
     let open! Effect in
@@ -17,6 +17,18 @@ let parse_file (sess: Session.sess) =
             end
             | Parse Block -> Some begin fun (k: (b, _) continuation) -> 
                 Deep.(continue k @@ try_with Pstmt.parse_block ps handler)
+            end
+            | Parse Pattern -> Some begin fun (k: (b, _) continuation) -> 
+                Deep.(continue k @@ try_with Ppat.parse_pattern ps handler)
+            end
+            | Parse Slot -> Some begin fun (k: (b, _) continuation) -> 
+                Deep.(continue k @@ try_with Ppat.parse_slot ps handler)
+            end
+            | Parse Type -> Some begin fun (k: (b, _) continuation) -> 
+                Deep.(continue k @@ try_with Ptype.parse_type ps handler)
+            end
+            | Parse Spell -> Some begin fun (k: (b, _) continuation) -> 
+                Deep.(continue k @@ try_with Pspell.parse_spell ps handler)
             end
             | _ -> None
         } in

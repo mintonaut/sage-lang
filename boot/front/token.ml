@@ -1,7 +1,9 @@
 type token_kind = 
     | Lpar | Rpar
     | Lbrace | Rbrace
-    | Comma | Semi
+    | Comma | Colon | Semi
+    | Underscore
+    | Pipe
 
     | Eq 
     | EqOp of token_kind
@@ -25,6 +27,8 @@ type token_kind =
     | OrOr
     | Bang
 
+    | Const
+    | Fn | Return
     | Let
     | While
     | If | Else
@@ -46,6 +50,9 @@ let rec string_of_token_kind = function
     | Rbrace        -> "}"
     | Comma         -> ","
     | Semi          -> ";"
+    | Colon         -> ":"
+    | Underscore    -> "_"
+    | Pipe          -> "|"
 
     | Plus          -> "+"
     | Minus         -> "-"
@@ -69,6 +76,9 @@ let rec string_of_token_kind = function
     | Eq            -> "="
     | EqOp p        -> string_of_token_kind p ^ "="
 
+    | Const         -> "const"
+    | Fn            -> "fn"
+    | Return        -> "return"
     | Let           -> "let"
     | While         -> "while"
     | If            -> "if"
