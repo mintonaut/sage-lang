@@ -93,8 +93,10 @@ and parse_expr_bottom (ps: pstate): Ast.expr =
     | Lbrace -> parse_expr_block ps
     | _ when eat ps While -> parse_expr_while lo ps
     | _ when eat ps If -> parse_expr_if lo ps
+    | _ when eat ps Match -> parse_expr_match lo ps
     | _ when eat ps Loop -> parse_expr_loop lo ps
     | _ when eat ps Break -> parse_expr_break lo ps
+    | _ when eat ps Return -> parse_expr_return lo ps
     | _ -> match parse_lit ps with
     | Some lit -> 
         bump ps; 
@@ -128,6 +130,38 @@ and parse_expr_if (lo: Loc.span) (ps: pstate): Ast.expr =
         if_else = belse;
     })
 
+and parse_expr_match (lo: Loc.span) (ps: pstate): Ast.expr = 
+    let value = parse_expr ps in
+    let alts = parse_match_alts ps in
+    locate ps lo (Ast.EXPR_match {
+        match_value = value;
+        match_alts  = alts;
+    })
+
+and parse_match_alts (ps: pstate): Ast.match_alt Loc.located array = 
+    expect ps Lbrace;
+    let alts = ref [parse_match_alt ps] in
+    while not (eat ps Rbrace) do
+        alts := parse_match_alt ps :: !alts;
+    done;
+    Array.of_list (List.rev !alts)
+
+and parse_match_alt (ps: pstate): Ast.match_alt Loc.located = 
+    let lo = ps.peek.span in
+    let pat = parse_pattern ps in
+    let guard = if eat ps If then Some (parse_expr ps) else None in
+    expect ps EqRangle;
+    let expr = parse_expr ps in
+    let alt = locate ps lo ({
+        Ast.alt_pat   = pat;
+        Ast.alt_guard = guard;
+        Ast.alt_rhs   = expr;
+    }) in
+    match ps.peek.kind with
+    | Rbrace -> alt
+    | _ when Ast.is_block_like expr -> ignore ps Comma; alt
+    | _ -> expect ps Comma; alt
+
 and parse_expr_loop (lo: Loc.span) (ps: pstate): Ast.expr = 
     let body = parse_block ps in
     locate ps lo (Ast.EXPR_loop body)
@@ -137,4 +171,10 @@ and parse_expr_break (lo: Loc.span) (ps: pstate): Ast.expr =
     | Semi -> None
     | _ -> Some (parse_expr ps)
     in locate ps lo (Ast.EXPR_break expr)
+
+and parse_expr_return (lo: Loc.span) (ps: pstate): Ast.expr = 
+    let expr = match ps.peek.kind with
+    | Semi -> None
+    | _ -> Some (parse_expr ps)
+    in locate ps lo (Ast.EXPR_return expr)
 

@@ -23,6 +23,7 @@
         ("while",   While);
         ("loop",    Loop);
         ("break",   Break);
+        ("match",   Match);
     ]
 }
 
@@ -68,6 +69,7 @@ rule token = parse
     | "!="          { BangEq }
     | "<="          { LangleEq }
     | ">="          { RangleEq }
+    | "=>"          { EqRangle }
     | "<<"          { Langle2 }
     | ">>"          { Rangle2 }
     | "&&"          { AndAnd }

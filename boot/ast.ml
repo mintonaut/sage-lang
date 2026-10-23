@@ -100,8 +100,19 @@ and expr' =
         while_cond: expr;
         while_body: block;
     }
+    | EXPR_match of {
+        match_value: expr;
+        match_alts: match_alt located array;
+    }
     | EXPR_loop of block
     | EXPR_break of expr option
+    | EXPR_return of expr option
+
+and match_alt = {
+    alt_pat: pat;
+    alt_guard: expr option;
+    alt_rhs: expr;
+}
 
 and stmt  = stmt' located
 and stmt' = 
@@ -153,12 +164,14 @@ let is_block_like (e: expr): bool =
     | EXPR_while _ -> true
     | EXPR_block _ -> true
     | EXPR_loop _ -> true
+    | EXPR_match _ -> true
     | _ -> false
 
 (* Returns true if the expression e can only be interpreted as a statement *)
 let is_statement (e: expr): bool = 
     match e.node with
     | EXPR_break _ -> true
+    | EXPR_return _ -> true
     | _ -> false
 
 (* [Note: Motivation and ambiguity of an expression-oriented syntax]

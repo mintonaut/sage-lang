@@ -19,7 +19,7 @@ let parse_fn_body (ps: pstate): Ast.fn_type =
     | _ when eat ps Eq -> 
         let expr = parse_expr ps in
         (if not (Ast.is_functional expr)
-        then error ps "Pure expression function bodies cannot be statements or blocks");
+        then error ~span:expr.span ps "Pure expression function bodies cannot be statements or blocks");
         (if not (Ast.is_block_like expr) then expect ps Semi);
         Ast.Fn_expr expr
     | Lbrace -> Ast.Fn_block (parse_block ps)

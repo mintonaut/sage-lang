@@ -41,8 +41,9 @@ exception Parser_err of {
     location: Loc.location;
 }
 
-let error (ps: pstate) = Printf.ksprintf begin fun reason -> 
-    let location = Loc.of_position ps.pstate_file.name ps.peek.span.lo in
+let error ?(span: Loc.span option) (ps: pstate) = Printf.ksprintf begin fun reason -> 
+    let span = Option.value ~default:ps.peek.span span in
+    let location = Loc.of_position ps.pstate_file.name span.lo in
     raise (Parser_err { reason; location })
 end
 

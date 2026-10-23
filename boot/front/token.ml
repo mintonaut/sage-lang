@@ -4,6 +4,7 @@ type token_kind =
     | Comma | Colon | Semi
     | Underscore
     | Pipe
+    | EqRangle
 
     | Eq 
     | EqOp of token_kind
@@ -33,6 +34,7 @@ type token_kind =
     | While
     | If | Else
     | Loop | Break
+    | Match
 
     | Lit of { kind: lit_kind; symb: string }
     | Ident of string
@@ -53,6 +55,7 @@ let rec string_of_token_kind = function
     | Colon         -> ":"
     | Underscore    -> "_"
     | Pipe          -> "|"
+    | EqRangle      -> "=>"
 
     | Plus          -> "+"
     | Minus         -> "-"
@@ -85,6 +88,7 @@ let rec string_of_token_kind = function
     | Else          -> "else"
     | Loop          -> "loop"
     | Break         -> "break"
+    | Match         -> "match"
 
     | Lit lit       -> lit.symb
     | Ident id      -> id
