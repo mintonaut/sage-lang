@@ -33,7 +33,9 @@ and parse_pat_bottom (ps: pstate): Ast.pat =
     | Some lit -> bump ps; locate ps lo (Ast.PAT_lit lit)
     | None -> unexpected ~expected:"a pattern" ps
 
-and make_pat_prefix (op: Ast.unpat) (ps: pstate): Ast.pat = locate ps ps.peek.span begin
+and make_pat_prefix (op: Ast.unpat) (ps: pstate): Ast.pat = 
+    let lo = ps.peek.span in
+    locate ps lo begin
     bump ps;
     let pat = parse_pat_bottom ps in
     Ast.PAT_prefix {

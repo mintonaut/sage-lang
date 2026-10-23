@@ -59,7 +59,9 @@ and parse_expr_prefix (ps: pstate): Ast.expr =
     | Bang -> make_expr_prefix Ast.Not ps
     | _ -> parse_expr_call ps
 
-and make_expr_prefix (op: Ast.unop) (ps: pstate): Ast.expr = locate ps ps.peek.span begin
+and make_expr_prefix (op: Ast.unop) (ps: pstate): Ast.expr = 
+    let lo = ps.peek.span in
+    locate ps lo begin
     bump ps;
     let expr = ensure_composable parse_expr_prefix ps in
     Ast.EXPR_prefix {

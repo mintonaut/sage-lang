@@ -14,7 +14,9 @@ let rec parse_type (ps: pstate): Ast.ty =
         | _ -> lhs
     in go lhs
 
-and parse_type_bottom (ps: pstate): Ast.ty = locate ps ps.peek.span begin
+and parse_type_bottom (ps: pstate): Ast.ty = 
+    let lo = ps.peek.span in
+    locate ps lo begin
     match ps.peek.kind with
     | Ident id -> bump ps; Ast.TY_var id
     | Lpar -> 

@@ -46,7 +46,9 @@ let parse_stmt (ps: pstate): Ast.stmt =
         expect ~expected:"a trailing semicolon" ps Semi; Ast.mark_trailing_semi stmt
     end else stmt
 
-let parse_block (ps: pstate): Ast.block = locate ps ps.peek.span begin
+let parse_block (ps: pstate): Ast.block =  
+    let lo = ps.peek.span in
+    locate ps lo begin
     expect ps Lbrace;
     let stmts = ref [] in
     while not (ps.peek.kind == Rbrace || eat ps Eof) do

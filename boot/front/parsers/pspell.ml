@@ -1,6 +1,8 @@
 open! Parser
 
-let parse_spell_const (ps: pstate): Ast.spell = locate ps ps.last.span begin
+let parse_spell_const (ps: pstate): Ast.spell = 
+    let lo = ps.last.span in
+    locate ps lo begin
     let ident = parse_ident ps in
     expect ~expected:"a type signature" ps Colon;
     let ty = parse_type ps in
@@ -25,7 +27,9 @@ let parse_fn_body (ps: pstate): Ast.fn_type =
     | Lbrace -> Ast.Fn_block (parse_block ps)
     | _ -> unexpected ~expected:"a function definition" ps
 
-let parse_spell_fn (ps: pstate): Ast.spell = locate ps ps.last.span begin
+let parse_spell_fn (ps: pstate): Ast.spell = 
+    let lo = ps.last.span in
+    locate ps lo begin
     let ident = parse_ident ps in
     let args = many ~bra:Lpar ~sep:Comma ~ket:Rpar parse_slot ps in
     let ret = if eat ps Colon then Some (parse_type ps) else None in
