@@ -5,7 +5,7 @@ type pstate = {
     mutable last:   token;
     pstate_lexbuf:  Lexing.lexbuf;
     pstate_sess:    Session.sess;
-    pstate_file:    File.name;
+    pstate_file:    File.description;
 }
 
 let log (ps: pstate) = Session.log
@@ -26,13 +26,13 @@ let make_state
             peek = curr;
             pstate_lexbuf = lexbuf;
             pstate_sess = sess;
-            pstate_file = input.file.name;
+            pstate_file = input.file;
         } in
         log ps "Built parser for %s" input.file.name;
         ps
 
 let bump (ps: pstate): unit = 
-    log ps "%s: Accepted token %S" ps.pstate_file (string_of_token ps.peek);
+    log ps "%s: Accepted token %S" ps.pstate_file.name (string_of_token ps.peek);
     ps.last <- ps.peek;
     ps.peek <- Lexer.token ps.pstate_lexbuf
 
@@ -42,7 +42,7 @@ exception Parser_err of {
 }
 
 let error (ps: pstate) = Printf.ksprintf begin fun reason -> 
-    let location = Loc.of_position ps.pstate_file ps.peek.span.lo in
+    let location = Loc.of_position ps.pstate_file.name ps.peek.span.lo in
     raise (Parser_err { reason; location })
 end
 
@@ -124,19 +124,6 @@ let repeat
             res := prule ps :: !res
         done;
         Array.of_list (List.rev !res)
-
-let handle_errors
-    ~(default:'a)
-    (sess: Session.sess)
-    (prule: pstate -> 'a)
-    (input: File.input File.handle)
-    : 'a = 
-        match prule (make_state sess input) with
-        | value -> value
-        | exception Parser_err { location; reason } 
-        | exception Lexer.Lexer_err { location; reason } -> 
-            Session.error sess "%s at %s" reason (Loc.string_of_location location);
-            default
 
 let parse_lit (ps: pstate): Ast.lit option = 
     match ps.peek.kind with

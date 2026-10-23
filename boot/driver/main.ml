@@ -44,7 +44,7 @@ then error "no input file specified"
 
 ;;
 
-let _ = 
+let scroll: Ast.mod_scroll = 
     let input = Option.get sess.sess_file_in in
     let file = File.describe input in
     match File.exists input, file.ext with
@@ -68,6 +68,6 @@ checkpoint ()
 
 ;;
 
-print_endline "Accepted"
-
+Printf.printf "Parsed scroll %s with %d spells\n" scroll.node.scroll_name 
+    (Array.length scroll.node.scroll_spells)
 

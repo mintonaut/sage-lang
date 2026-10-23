@@ -140,6 +140,12 @@ and fn_type =
     | Fn_block of block
     | Fn_expr of expr
 
+type mod_scroll = mod_scroll' located
+and mod_scroll' = {
+    scroll_name: symbol;
+    scroll_spells: spell array;
+}
+
 (* Returns true if the expression e has a block-y form, i.e. they define sequences of statements *)
 let is_block_like (e: expr): bool = 
     match e.node with

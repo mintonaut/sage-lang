@@ -20,6 +20,8 @@ let describe (path: path): description =
     let ext = String.drop_first 1 (Filename.extension name) in
     { dir; name; ext }
 
+let name (file: description): name = Filename.chop_extension file.name
+
 type 'a handle = {
     path: path;
     file: description;
